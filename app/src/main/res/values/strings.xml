@@ -2,4 +2,7 @@
     <string name="app_name">Wizz News</string>
     <string name="error">Error</string>
     <string name="try_again">Try Again</string>
+    <string name="profil">Profil</string>
+    <string name="tutup">Tutup</string>
+    <string name="logout">Logout</string>
 </resources>
