@@ -26,18 +26,14 @@ class MainViewModel : ViewModel() {
     var errorMessage = mutableStateOf<String?>(null)
         private set
 
-    init {
-        retrieveData()
-    }
-
-    fun retrieveData() {
+    fun retrieveData(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             status.value = ApiStatus.LOADING
             try {
-                val result = NewsApi.service.getNews()
+                val result = NewsApi.service.getNews(userId)
                 Log.d("MainViewModel", "Succsess: $result")
 
-                data.value = NewsApi.service.getNews()
+                data.value = NewsApi.service.getNews(userId)
                 status.value = ApiStatus.SUCCESS
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Failure: ${e.message}")
@@ -62,7 +58,7 @@ class MainViewModel : ViewModel() {
                 )
 
                 if (result.status == "success")
-                    retrieveData()
+                    retrieveData(userId)
                 else
                     throw Exception(result.message)
             } catch (e: Exception) {

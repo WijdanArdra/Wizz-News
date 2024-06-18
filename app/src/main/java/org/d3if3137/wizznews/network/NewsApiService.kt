@@ -27,7 +27,9 @@ private val retrofit = Retrofit.Builder()
 
 interface NewsApiService {
     @GET("belajarRestApiWeb/files/wijdan/view.php")
-    suspend fun getNews(): List<News>
+    suspend fun getNews(
+        @Header("Authorization") userId: String
+    ): List<News>
 
     @Multipart
     @POST("belajarRestApiWeb/files/wijdan/AddNews.php")

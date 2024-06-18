@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,6 +71,8 @@ import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
 import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -161,7 +164,7 @@ fun MainScreen() {
             }
         }
     ) { padding ->
-        ScreenContent(viewModel, Modifier.padding(padding))
+        ScreenContent(viewModel, user.email, Modifier.padding(padding))
 
         if (showDialog) {
             ProfilDialog(
@@ -189,10 +192,14 @@ fun MainScreen() {
 }
 
 @Composable
-fun ScreenContent(viewModel: MainViewModel, modifier: Modifier) {
-//    val viewModel: MainViewModel = viewModel()
+fun ScreenContent(viewModel: MainViewModel, userId: String, modifier: Modifier) {
     val data by viewModel.data
     val status by viewModel.status.collectAsState()
+    var refreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(userId) {
+        viewModel.retrieveData(userId)
+    }
 
     Column(modifier = modifier.padding(24.dp)) {
         Text(text = "JUDUL", fontWeight = FontWeight.Bold, fontSize = 30.sp)
@@ -217,13 +224,22 @@ fun ScreenContent(viewModel: MainViewModel, modifier: Modifier) {
             }
 
             ApiStatus.SUCCESS -> {
-                LazyVerticalGrid(
-                    contentPadding = PaddingValues(bottom = 50.dp),
-                    modifier = Modifier.padding(top = 24.dp),
-                    columns = GridCells.Fixed(2)
+                SwipeRefresh(
+                    state = rememberSwipeRefreshState(isRefreshing = refreshing),
+                    onRefresh = {
+                        refreshing = true
+                        viewModel.retrieveData(userId)
+                        refreshing = false
+                    },
                 ) {
-                    items(data) {
-                        ItemsGrid(berita = it)
+                    LazyVerticalGrid(
+                        contentPadding = PaddingValues(bottom = 50.dp),
+                        modifier = Modifier.padding(top = 24.dp),
+                        columns = GridCells.Fixed(2)
+                    ) {
+                        items(data) {
+                            ItemsGrid(berita = it)
+                        }
                     }
                 }
             }
@@ -236,7 +252,7 @@ fun ScreenContent(viewModel: MainViewModel, modifier: Modifier) {
                 ) {
                     Text(text = stringResource(R.string.error))
                     Button(
-                        onClick = { viewModel.retrieveData() },
+                        onClick = { viewModel.retrieveData(userId) },
                         modifier = Modifier.padding(top = 16.dp),
                         contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
                     ) {
@@ -266,7 +282,9 @@ fun ItemsGrid(berita: News) {
                     .build(),
                 modifier = Modifier.fillMaxWidth(),
                 contentDescription = berita.judul,
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(id = R.drawable.loading_img),
+                error = painterResource(id = R.drawable.broken_img),
             )
             Text(
                 modifier = Modifier
