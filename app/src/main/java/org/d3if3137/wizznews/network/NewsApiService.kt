@@ -26,11 +26,11 @@ private val retrofit = Retrofit.Builder()
     .build()
 
 interface NewsApiService {
-    @GET("belajarRestApiWeb/link/files/wijdan/view.php")
+    @GET("belajarRestApiWeb/files/wijdan/view.php")
     suspend fun getNews(): List<News>
 
     @Multipart
-    @POST("belajarRestApiWeb/link/files/wijdan/AddNews.php")
+    @POST("belajarRestApiWeb/files/wijdan/AddNews.php")
     suspend fun postNews(
         @Header("Authorization") userId: String,
         @Part("judul") judul: RequestBody,
@@ -46,7 +46,7 @@ object NewsApi {
     }
 
     fun getNewsUrl(imageId: String): String {
-        return "${BASE_URL}belajarRestApiWeb/link/files/wijdan/image.php?id=$imageId"
+        return "${BASE_URL}belajarRestApiWeb/files/wijdan/image.php?imageId=$imageId"
     }
 }
 

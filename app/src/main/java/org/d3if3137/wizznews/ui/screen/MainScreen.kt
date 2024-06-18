@@ -50,6 +50,7 @@ import org.d3if3137.wizznews.R
 import org.d3if3137.wizznews.model.MainViewModel
 import org.d3if3137.wizznews.model.News
 import org.d3if3137.wizznews.network.ApiStatus
+import org.d3if3137.wizznews.network.NewsApi
 import org.d3if3137.wizznews.ui.theme.BasicColor
 import org.d3if3137.wizznews.ui.theme.LightGrey
 import org.d3if3137.wizznews.ui.theme.TextColor
@@ -161,7 +162,7 @@ fun ItemsGrid(berita : News) {
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(berita.imageId)
+                    .data(NewsApi.getNewsUrl(berita.imageId))
                     .crossfade(true)
                     .build(),
                 modifier = Modifier.fillMaxWidth(),
