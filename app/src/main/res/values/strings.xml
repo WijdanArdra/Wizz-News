@@ -5,4 +5,8 @@
     <string name="profil">Profil</string>
     <string name="tutup">Tutup</string>
     <string name="logout">Logout</string>
+    <string name="judul">Judul</string>
+    <string name="deskripsi">Deskripsi</string>
+    <string name="batal">Batal</string>
+    <string name="simpan">Simpan</string>
 </resources>

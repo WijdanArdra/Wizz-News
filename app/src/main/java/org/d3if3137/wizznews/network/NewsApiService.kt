@@ -35,7 +35,7 @@ interface NewsApiService {
         @Header("Authorization") userId: String,
         @Part("judul") judul: RequestBody,
         @Part("deskripsi") deskripsi: RequestBody,
-        @Part image: MultipartBody.Part
+        @Part imageId: MultipartBody.Part
     ): OpStatus
 
 }
@@ -46,7 +46,8 @@ object NewsApi {
     }
 
     fun getNewsUrl(imageId: String): String {
-        return "${BASE_URL}belajarRestApiWeb/files/wijdan/image.php?imageId=$imageId"
+        val encodedImageId = imageId.replace("&", "%26")
+        return "${BASE_URL}belajarRestApiWeb/files/wijdan/image.php?imageId=$encodedImageId"
     }
 }
 

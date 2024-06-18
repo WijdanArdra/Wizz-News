@@ -1,7 +1,14 @@
 package org.d3if3137.wizznews.ui.screen
 
+import android.content.ContentResolver
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +66,10 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -84,7 +95,18 @@ fun MainScreen() {
     val context = LocalContext.current
     val dataStore = UserDataStore(context)
     val user by dataStore.userFlow.collectAsState(User())
+
+    val viewModel: MainViewModel = viewModel()
+    val errorMessage by viewModel.errorMessage
+
     var showDialog by remember { mutableStateOf(false) }
+    var showNewsDialog by remember { mutableStateOf(false) }
+
+    var bitmap: Bitmap? by remember { mutableStateOf(null) }
+    val launcher = rememberLauncherForActivityResult(CropImageContract()) {
+        bitmap = getCroppedImage(context.contentResolver, it)
+        if (bitmap != null) showNewsDialog = true
+    }
 
     Scaffold(
         topBar = {
@@ -100,8 +122,7 @@ fun MainScreen() {
                     IconButton(onClick = {
                         if (user.email.isEmpty()) {
                             CoroutineScope(Dispatchers.IO).launch { signIn(context, dataStore) }
-                        }
-                        else {
+                        } else {
                             showDialog = true
                         }
                     }) {
@@ -121,7 +142,16 @@ fun MainScreen() {
                     .size(57.dp)
                     .clip(RoundedCornerShape(40))
                     .background(BasicColor),
-                onClick = {}) {
+                onClick = {
+                    val option = CropImageContractOptions(
+                        null, CropImageOptions(
+                            imageSourceIncludeGallery = false,
+                            imageSourceIncludeCamera = true,
+                            fixAspectRatio = true
+                        )
+                    )
+                    launcher.launch(option)
+                }) {
                 Icon(
                     modifier = Modifier.size(43.dp),
                     imageVector = Icons.Filled.Add,
@@ -131,7 +161,7 @@ fun MainScreen() {
             }
         }
     ) { padding ->
-        ScreenContent(Modifier.padding(padding))
+        ScreenContent(viewModel, Modifier.padding(padding))
 
         if (showDialog) {
             ProfilDialog(
@@ -141,12 +171,26 @@ fun MainScreen() {
                 showDialog = false
             }
         }
+
+        if (showNewsDialog) {
+            NewsDialog(
+                bitmap = bitmap,
+                onDismissRequest = { showNewsDialog = false }) { judul, deskripsi ->
+                viewModel.saveData(user.email, judul, deskripsi, bitmap!!)
+                showNewsDialog = false
+            }
+        }
+
+        if (errorMessage != null) {
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+            viewModel.clearMessage()
+        }
     }
 }
 
 @Composable
-fun ScreenContent(modifier: Modifier) {
-    val viewModel: MainViewModel = viewModel()
+fun ScreenContent(viewModel: MainViewModel, modifier: Modifier) {
+//    val viewModel: MainViewModel = viewModel()
     val data by viewModel.data
     val status by viewModel.status.collectAsState()
 
@@ -205,12 +249,12 @@ fun ScreenContent(modifier: Modifier) {
 }
 
 @Composable
-fun ItemsGrid(berita : News) {
+fun ItemsGrid(berita: News) {
     Column(
         modifier = Modifier
             .padding(4.dp)
             .clip(shape = RoundedCornerShape(17.dp))
-            .border(1.dp, LightGrey),
+            .border(1.dp, LightGrey, RoundedCornerShape(17.dp)),
     ) {
         Box(
             contentAlignment = Alignment.BottomCenter
@@ -273,8 +317,7 @@ private suspend fun handleSignIn(result: GetCredentialResponse, dataStore: UserD
         } catch (e: GoogleIdTokenParsingException) {
             Log.e("SIGN-IN", "Error: ${e.message}")
         }
-    }
-    else {
+    } else {
         Log.e("SIGN-IN", "Error: unrecognized custom credential type")
     }
 }
@@ -288,6 +331,25 @@ private suspend fun signOut(context: Context, dataStore: UserDataStore) {
         dataStore.saveData(User())
     } catch (e: ClearCredentialException) {
         Log.e("SIGN-IN", "Error: ${e.errorMessage}")
+    }
+}
+
+private fun getCroppedImage(
+    resolver: ContentResolver,
+    result: CropImageView.CropResult
+): Bitmap? {
+    if (!result.isSuccessful) {
+        Log.e("IMAGE", "Error: ${result.error}")
+        return null
+    }
+
+    var uri = result.uriContent ?: return null
+
+    return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+        MediaStore.Images.Media.getBitmap(resolver, uri)
+    } else {
+        val source = ImageDecoder.createSource(resolver, uri)
+        ImageDecoder.decodeBitmap(source)
     }
 }
 
