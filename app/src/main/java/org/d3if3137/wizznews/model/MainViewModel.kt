@@ -26,6 +26,13 @@ class MainViewModel : ViewModel() {
     var errorMessage = mutableStateOf<String?>(null)
         private set
 
+    private var idCounter = 0
+
+    fun getNextId(): String {
+        idCounter++
+        return idCounter.toString()
+    }
+
     fun retrieveData(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             status.value = ApiStatus.LOADING
@@ -44,8 +51,10 @@ class MainViewModel : ViewModel() {
 
     fun saveData(
         userId: String,
+        id: String,
         judul: String,
         deskripsi: String,
+        user: Int,
         bitmap: Bitmap
     ) {
         viewModelScope.launch(Dispatchers.IO) {

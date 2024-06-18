@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -179,8 +180,8 @@ fun MainScreen() {
         if (showNewsDialog) {
             NewsDialog(
                 bitmap = bitmap,
-                onDismissRequest = { showNewsDialog = false }) { judul, deskripsi ->
-                viewModel.saveData(user.email, judul, deskripsi, bitmap!!)
+                onDismissRequest = { showNewsDialog = false }) { id, judul, deskripsi, _ ->
+                viewModel.saveData(user.email, id, judul, deskripsi, 1, bitmap!!)
                 showNewsDialog = false
             }
         }
@@ -202,12 +203,11 @@ fun ScreenContent(viewModel: MainViewModel, userId: String, modifier: Modifier) 
         viewModel.retrieveData(userId)
     }
 
-    Column(modifier = modifier.padding(24.dp)) {
-        Text(text = "JUDUL", fontWeight = FontWeight.Bold, fontSize = 30.sp)
-        Spacer(modifier = Modifier.height(16.dp))
+    Column(modifier = modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(text = "Aplikasi ini adalah aplikasi untuk melihat berita yang anda simpan untuk dibaca di lain waktu. Tersedia juga berita yang ditambahkan oleh Admin.")
+        Divider()
         Text(
-            text = "About App",
-            color = Color.Gray,
+            text = "Berita tersimpan:", fontWeight = FontWeight.Bold, fontSize = 30.sp,
             textAlign = TextAlign.Justify
         )
 
@@ -235,7 +235,6 @@ fun ScreenContent(viewModel: MainViewModel, userId: String, modifier: Modifier) 
                 ) {
                     LazyVerticalGrid(
                         contentPadding = PaddingValues(bottom = 50.dp),
-                        modifier = Modifier.padding(top = 24.dp),
                         columns = GridCells.Fixed(2)
                     ) {
                         items(data) { news ->
@@ -260,7 +259,7 @@ fun ScreenContent(viewModel: MainViewModel, userId: String, modifier: Modifier) 
                         modifier = Modifier.padding(top = 16.dp),
                         contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
                     ) {
-                        Text(text = stringResource(R.string.try_again))
+                        Text(text = stringResource(R.string.coba_lagi))
                     }
                 }
             }
@@ -310,7 +309,7 @@ fun ItemsGrid(berita: News, onDelete: (String) -> Unit) {
                     }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "",
+                            contentDescription = stringResource(id = R.string.hapus),
                             tint = Color.White
                         )
                     }
@@ -391,7 +390,7 @@ private fun getCroppedImage(
         return null
     }
 
-    var uri = result.uriContent ?: return null
+    val uri = result.uriContent ?: return null
 
     return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
         MediaStore.Images.Media.getBitmap(resolver, uri)

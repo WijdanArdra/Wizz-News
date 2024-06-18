@@ -29,19 +29,22 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import org.d3if3137.wizznews.R
+import org.d3if3137.wizznews.model.MainViewModel
 import org.d3if3137.wizznews.ui.theme.WizzNewsTheme
 
 @Composable
 fun NewsDialog(
     bitmap: Bitmap?,
     onDismissRequest: () -> Unit,
-    onConfirmation: (String, String) -> Unit
+    onConfirmation: (String, String, String, Int) -> Unit
 ) {
+    val viewModel: MainViewModel = viewModel()
     var judul by remember { mutableStateOf("") }
     var deskripsi by remember { mutableStateOf("") }
 
-    Dialog(onDismissRequest = { onDismissRequest }) {
+    Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(
             modifier = Modifier.padding(16.dp),
             shape = RoundedCornerShape(16.dp)
@@ -61,7 +64,6 @@ fun NewsDialog(
                     value = judul,
                     onValueChange = {judul = it},
                     label = { Text(text = stringResource(R.string.judul)) },
-                    maxLines = 1,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
                         imeAction = ImeAction.Next
@@ -72,10 +74,9 @@ fun NewsDialog(
                     value = deskripsi,
                     onValueChange = {deskripsi = it},
                     label = { Text(text = stringResource(R.string.deskripsi)) },
-                    maxLines = 1,
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Words,
-                        imeAction = ImeAction.Next
+                        imeAction = ImeAction.Done
                     ),
                     modifier = Modifier.padding(8.dp)
                 )
@@ -86,13 +87,16 @@ fun NewsDialog(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     OutlinedButton(
-                        onClick = { onDismissRequest },
+                        onClick = { onDismissRequest() },
                         modifier = Modifier.padding(8.dp)
                     ) {
                         Text(text = stringResource(R.string.batal))
                     }
                     OutlinedButton(
-                        onClick = { onConfirmation(judul, deskripsi) },
+                        onClick = {
+                            val id = viewModel.getNextId()
+                            onConfirmation(id ,judul, deskripsi, 1)
+                                  },
                         enabled = judul.isNotEmpty() && deskripsi.isNotEmpty(),
                         modifier = Modifier.padding(8.dp)
                     ) {
@@ -111,8 +115,8 @@ fun NewsDialogPreview() {
     WizzNewsTheme {
         NewsDialog(
             bitmap = null,
-            onDismissRequest = {  },
-            onConfirmation = { _, _ -> }
+            onDismissRequest = {},
+            onConfirmation = { _, _, _, _ -> }
         )
     }
 }
