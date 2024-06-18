@@ -8,11 +8,13 @@ import org.d3if3137.wizznews.model.News
 import org.d3if3137.wizznews.model.OpStatus
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Query
 
 private const val BASE_URL = "https://rapidly-engaged-mule.ngrok-free.app/"
 
@@ -40,6 +42,11 @@ interface NewsApiService {
         @Part imageId: MultipartBody.Part
     ): OpStatus
 
+    @DELETE("belajarRestApiWeb/files/wijdan/delete.php")
+    suspend fun deleteNews(
+        @Header("Authorization") userId: String,
+        @Query("id") id: String
+    ) : OpStatus
 }
 
 object NewsApi {

@@ -63,6 +63,24 @@ class MainViewModel : ViewModel() {
                     throw Exception(result.message)
             } catch (e: Exception) {
                 Log.d("MainViewModel", "Failure2: ${e.message}")
+                errorMessage.value = "${e.message}"
+            }
+        }
+    }
+
+    fun deleteData(userId: String, dataId: String){
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = NewsApi.service.deleteNews(userId, dataId)
+                if (response.status == "success") {
+                    Log.d("MainViewModel", "Image deleted successfully: $dataId")
+                    retrieveData(userId)
+                } else {
+                    Log.d("MainViewModel", "Failed to delete the image: ${response.message}")
+                    errorMessage.value = "Failed to delete the image: ${response.message}"
+                }
+            } catch (e: Exception) {
+                Log.d("MainViewModel", "Failure: ${e.message}")
                 errorMessage.value = "Error: ${e.message}"
             }
         }

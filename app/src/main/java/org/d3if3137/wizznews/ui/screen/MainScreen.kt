@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -237,8 +238,11 @@ fun ScreenContent(viewModel: MainViewModel, userId: String, modifier: Modifier) 
                         modifier = Modifier.padding(top = 24.dp),
                         columns = GridCells.Fixed(2)
                     ) {
-                        items(data) {
-                            ItemsGrid(berita = it)
+                        items(data) { news ->
+                            ItemsGrid(berita = news, onDelete = { beritaId ->
+                                Log.d("ScreenContent", "Deleting data with ID: $beritaId")
+                                viewModel.deleteData(userId, beritaId)
+                            })
                         }
                     }
                 }
@@ -265,7 +269,18 @@ fun ScreenContent(viewModel: MainViewModel, userId: String, modifier: Modifier) 
 }
 
 @Composable
-fun ItemsGrid(berita: News) {
+fun ItemsGrid(berita: News, onDelete: (String) -> Unit) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    DisplayAlertDialog(
+        openDialog = showDialog,
+        onDismissRequest = { showDialog = false },
+        onConfirmation = {
+            onDelete(berita.id)
+            showDialog = false
+        }
+    )
+
     Column(
         modifier = Modifier
             .padding(4.dp)
@@ -275,17 +290,32 @@ fun ItemsGrid(berita: News) {
         Box(
             contentAlignment = Alignment.BottomCenter
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(NewsApi.getNewsUrl(berita.imageId))
-                    .crossfade(true)
-                    .build(),
-                modifier = Modifier.fillMaxWidth(),
-                contentDescription = berita.judul,
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(id = R.drawable.loading_img),
-                error = painterResource(id = R.drawable.broken_img),
-            )
+            Box(
+                contentAlignment = Alignment.TopEnd
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(NewsApi.getNewsUrl(berita.imageId))
+                        .crossfade(true)
+                        .build(),
+                    modifier = Modifier.fillMaxWidth(),
+                    contentDescription = berita.judul,
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = R.drawable.loading_img),
+                    error = painterResource(id = R.drawable.broken_img),
+                )
+                if (berita.mine == 1) {
+                    IconButton(onClick = {
+                        showDialog = true
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
             Text(
                 modifier = Modifier
                     .background(Color(0f, 0f, 0f, 0.5f))
